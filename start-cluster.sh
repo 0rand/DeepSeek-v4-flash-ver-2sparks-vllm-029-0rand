@@ -6,7 +6,7 @@
 # ALL editable config lives in .env (see .env.sample). This script only:
 #   1. sources .env,
 #   2. renders serve script (vllm serve ...) into $DIR/work/serve-rank.sh,
-#   3. calls $SPARK_VLLM_DOCKER/launch-cluster.sh with cluster args.
+#   3. calls $SPARK_VLLM_DOCKER_HOME/launch-cluster.sh with cluster args.
 #
 # Usage:
 #   ./start-cluster.sh start       (default: -d daemon)
@@ -22,9 +22,16 @@ cd "$DIR"
 [ -f .env ] || { echo "ERROR: .env missing — cp .env.sample .env && edit" >&2; exit 1; }
 set -a; . ./.env; set +a
 
-SPARK_VLLM_DOCKER="${SPARK_VLLM_DOCKER:-$HOME/spark-vllm-docker}"
-LAUNCHER="$SPARK_VLLM_DOCKER/launch-cluster.sh"
-[ -f "$LAUNCHER" ] || { echo "ERROR: $LAUNCHER not found" >&2; exit 1; }
+# launch-cluster.sh mounts ${HF_HOME:-$HOME/.cache/huggingface} at
+# /root/.cache/huggingface. MUST be the good hub tree: ~/.cache/huggingface holds
+# a ROOT-OWNED PARTIAL decoy (config+index, 8 .incomplete blobs, no shard
+# symlinks) — serving from it hangs the loader forever (observed 2026-09-08,
+# read_bytes=0, all threads futex). Never launch without HF_HOME set.
+export HF_HOME="${HF_CACHE_DIR:-$HOME/models/deepseek-ai}"
+
+SPARK_VLLM_DOCKER_HOME="${SPARK_VLLM_DOCKER_HOME:-$HOME/spark-vllm-docker}"
+LAUNCHER="$SPARK_VLLM_DOCKER_HOME/launch-cluster.sh"
+[ -f "$LAUNCHER" ] || { echo "ERROR: $LAUNCHER not found — set SPARK_VLLM_DOCKER_HOME in .env" >&2; exit 1; }
 
 # defaults (override in .env)
 IMAGE="${IMAGE:-vllm_spark_dsv4:0.29-b12x}"
