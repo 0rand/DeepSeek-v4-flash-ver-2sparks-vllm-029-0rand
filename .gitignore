@@ -1,0 +1,6 @@
+# Real cluster config — NOT committed
+/.env
+
+# Runtime artifacts
+/work/
+*.log
