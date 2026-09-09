@@ -169,6 +169,13 @@ Dspark acceptance at high concurrency = ~ 70%
 At 1 seq = ~ 60%
 
 Configuration: DSpark tokens=3, batch tokens = 8200, GMU = 0.87 (1.9M kv cache)
+
+ker_TP0 pid=257) INFO 09-09 20:24:26 [gpu_worker.py:681] Available KV cache memory: 19.06 GiB
+(Worker_TP0 pid=257) INFO 09-09 20:24:26 [gpu_worker.py:696] CUDA graph memory profiling is enabled (default since v0.21.0). The current --gpu-memory-utilization=0.8700 is equivalent to --gpu-memory-utilization=0.8577 without CUDA graph memory profiling. To maintain the same effective KV cache size as before, increase --gpu-memory-utilization to 0.8823. To disable, set VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=0.
+(EngineCore pid=184) INFO 09-09 20:24:26 [kv_cache_utils.py:2312] GPU KV cache size: 1,844,583 tokens, Maximum concurrency for 1,048,576 tokens per request: 1.76x
+(Worker_TP0 pid=257) INFO 09-09 20:24:26 [gpu_worker.py:781] Cleared 0.15 GiB of cached CUDA allocator memory before KV cache allocation.
+
+
 8 seqs ~ 110 t/s
 1 seq ~ 45 t/s
 Tool-eval-bench scores:
