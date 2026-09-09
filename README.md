@@ -65,10 +65,12 @@ command from it and hands it to `launch-cluster.sh` (`-t IMAGE -n NODES
    free at boot; the README's 0.9 crashes with
    `Free memory ... less than desired GPU memory utilization`. 0.87 is
    tight-but-valid; 0.85 is the proven value.
-5. **DSpark k must be divisible by n_predict=3.** The spec config validator
-   rejects k=5 (`num_speculative_tokens:5 must be divisible by n_predict=3`);
-   k=3 works (PILCOTHINK reference). Anemll's k=6 floor is a fork constraint,
-   not upstream's — 6 is inefficient vs 3.
+5. **DSpark k = 6 (not 3).** The spec config validator requires k divisible by
+   n_predict=3 (rejects k=5: `num_speculative_tokens:5 must be divisible by
+   n_predict=3`), but k=3 is NOT quality-neutral: Primo 2026-09-09 — k=3
+   mangled the thinking process (acceptance looked fine, sampled reasoning
+   degraded); switching to k=6 improved quality dramatically. Anemll's k=6
+   floor is a fork constraint that happens to match the quality optimum.
 6. **`--skip-mm-profiling` + `--limit-mm-per-prompt {"image": 8}`** — RAM guard.
    Images in USER messages only (DeepSeek contract; system/assistant images are
    rejected 400). Max 384 image tokens/image.
