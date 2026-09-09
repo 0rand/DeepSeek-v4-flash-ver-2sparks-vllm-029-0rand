@@ -168,7 +168,41 @@ KV Cache = 1.5M
 Dspark acceptance at high concurrency = ~ 70%
 At 1 seq = ~ 60%
 
-Tool-eval-bench scores: 90+ /100 at 0.8 temperature
+Configuration: DSpark tokens=3, batch tokens = 8200, GMU = 0.87 (1.9M kv cache)
+8 seqs ~ 110 t/s
+1 seq ~ 45 t/s
+Tool-eval-bench scores:
+temperature = 0.6, top_p = 0.85
+╭─────────────────────────────────────────────────────────────────────────────────────────────────────── 🏆 Benchmark Complete ────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                                                                                                                                                                                                      │
+│    Model:  deepseek-ai/DeepSeek-V4-Flash-Vision-Exp                                                                                                                                                                                  │
+│    Score:  91 / 100                                                                                                                                                                                                                  │
+│    Rating: ★★★★★ Excellent                                                                                                                                                                                                           │
+│    Benchmark: tool-eval-bench v2.6.1.dev25+g4365b9031                                                                                                                                                                                │
+│    Engine:       vLLM 0.28.1rc1.dev475+g6fbb00b18.d20260907                                                                                                                                                                          │
+│    Max context:  1,048,576 tokens                                                                                                                                                                                                    │
+│                                                                                                                                                                                                                                      │
+│    ✅ 74 passed   ⚠️  12 partial   ❌ 2 failed                                                                                                                                                                                       │
+│    Points: 160/176                                                                                                                                                                                                                   │
+│                                                                                                                                                                                                                                      │
+│    Quality:        91/100                                                                                                                                                                                                            │
+│    Responsiveness: 14/100  (median turn: 9.9s)                                                                                                                                                                                       │
+│    Deployability:  68/100  (α=0.7)                                                                                                                                                                                                   │
+│    Weakest: M Autonomous Planning (67%)                                                                                                                                                                                              │
+│                                                                                                                                                                                                                                      │
+│    Completed in 548.1s                                                                                                                                                                                                               │
+│                                                                                                                                                                                                                                      │
+│    📊 Token Usage:                                                                                                                                                                                                                   │
+│    Total: 593,063 tokens  │  Efficiency: 0.3 pts/1K tokens                                                                                                                                                                           │
+│                                                                                                                                                                                                                                      │
+│    ── How this score is calculated ──                                                                                                                                                                                                │
+│    • Each scenario: pass=2pt, partial=1pt, fail=0pt                                                                                                                                                                                  │
+│    • Category %: earned / max per category                                                                                                                                                                                           │
+│    • Final score: (total points / max points) × 100                                                                                                                                                                                  │
+│    • Deployability: 0.7×quality + 0.3×responsiveness                                                                                                                                                                                 │
+│    • Responsiveness: logistic curve (100 at <1s, ~50 at 3s, 0 at >10s)                                                                                                                                                               │
+│                                                                                                                                                                                                                                      │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 
 ```
 
