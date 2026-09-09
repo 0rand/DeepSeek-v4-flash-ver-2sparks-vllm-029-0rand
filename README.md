@@ -82,7 +82,7 @@ command from it and hands it to `launch-cluster.sh` (`-t IMAGE -n NODES
 - Boot ~10 min (weights 48/48 in 29 s, CUDA graph capture after).
 - Text smoke + native vision (dragon portrait) PASS; DSpark acceptance
   per-position ~0.70/0.49/0.28, avg 44–76%; ~56 tok/s on a 600-token gen.
-- All settings listed above: seqs 16, batch 4096, k=3, util 0.87, 1M ctx.
+- All settings listed above: seqs 8, batch 4096, k=6, util 0.87, 1M ctx.
 
 ## Files
 
@@ -168,7 +168,7 @@ KV Cache = 1.5M
 Dspark acceptance at high concurrency = ~ 70%
 At 1 seq = ~ 60%
 
-Tool-eval-bench scores: TBD
+Tool-eval-bench scores: 90+ /100 at 0.8 temperature
 
 ```
 
