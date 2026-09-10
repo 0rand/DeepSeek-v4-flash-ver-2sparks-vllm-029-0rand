@@ -76,6 +76,7 @@ vllm serve ${MODEL} \\
     --max-num-batched-tokens ${MAX_NUM_BATCHED_TOKENS} \\
     --gpu-memory-utilization ${GPU_MEMORY_UTIL} \\
     --enable-prefix-caching \\
+    --async-scheduling \\
     --enable-chunked-prefill \\
     --skip-mm-profiling \\
     --limit-mm-per-prompt '{"image": ${LIMIT_MM_IMAGES}}' \\
