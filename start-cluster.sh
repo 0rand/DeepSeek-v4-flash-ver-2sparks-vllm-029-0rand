@@ -54,10 +54,18 @@ DRAFT_SAMPLE_METHOD="${DRAFT_SAMPLE_METHOD:-probabilistic}"
 REASONING_EFFORT="${REASONING_EFFORT:-max}"
 LIMIT_MM_IMAGES="${LIMIT_MM_IMAGES:-8}"
 READY_TIMEOUT_S="${READY_TIMEOUT_S:-1500}"
+FIX_MM_PREFIX_SPAN="${FIX_MM_PREFIX_SPAN:-0}"
 
 [[ -n "$CLUSTER_NODES" ]] || { echo "ERROR: CLUSTER_NODES not set" >&2; exit 1; }
 
 # --- render the serve command (identical on every node; launcher injects ranks) ---
+# V2 mm-prefix span fix (INVESTIGATION-vision-grounding-bias.md §12):
+# Python-only patch applied to site-packages on head+worker via --apply-mod;
+# persisted for the lifetime of the container (re-applied; idempotent).
+FIX_MOD_ARGS=()
+if [[ "${FIX_MM_PREFIX_SPAN:-0}" == "1" ]]; then
+  FIX_MOD_ARGS+=(--apply-mod "$DIR/mods/fix-dsv4-mm-prefix-span")
+fi
 mkdir -p "$DIR/work"
 SERVE_SCRIPT="$DIR/work/serve.sh"
 cat > "$SERVE_SCRIPT" <<EOF
@@ -103,7 +111,8 @@ case "$action" in
     echo "=== launching cluster via $LAUNCHER ==="
     "$LAUNCHER" -t "$IMAGE" -n "$CLUSTER_NODES" \
         --eth-if "$ETH_IF" --ib-if "$IB_IF" \
-        --launch-script "$SERVE_SCRIPT" -d
+        --launch-script "$SERVE_SCRIPT" -d \
+        "${FIX_MOD_ARGS[@]}"
     echo "=== waiting for :${PORT}/health (max ${READY_TIMEOUT_S}s) ==="
     for i in $(seq 1 $((READY_TIMEOUT_S / 5))); do
       if curl -s -m 2 "http://localhost:${PORT}/health" >/dev/null 2>&1; then

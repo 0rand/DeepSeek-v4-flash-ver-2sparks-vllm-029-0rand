@@ -1,0 +1,79 @@
+--- a/vllm/v1/worker/gpu/model_states/default.py
++++ b/vllm/v1/worker/gpu/model_states/default.py
+@@ -201,10 +201,19 @@
+             and self.encoder_cache is not None
+             and self.model_config.is_mm_prefix_lm
+         ):
++            hf_text_config = self.model_config.hf_text_config
++            span_leading_pad_modulus = getattr(
++                hf_text_config, "mm_prefix_span_leading_pad_modulus", 0
++            )
++            clamp_sliding_window = getattr(
++                hf_text_config, "mm_prefix_clamp_sliding_window", False
++            )
+             req_doc_ranges = compute_mm_prefix_ranges(
+                 req_ids=input_batch.req_ids,
+                 mm_features=self.encoder_cache.mm_features,
+                 sliding_window=self.model_config.get_sliding_window(),
++                span_leading_pad_modulus=span_leading_pad_modulus,
++                clamp_sliding_window=clamp_sliding_window,
+             )
+         attn_metadata = build_attn_metadata(
+             attn_groups=attn_groups,
+--- a/vllm/v1/worker/gpu/attn_utils.py
++++ b/vllm/v1/worker/gpu/attn_utils.py
+@@ -354,11 +354,23 @@
+     req_ids: list[str],
+     mm_features: dict[str, list[MultiModalFeatureSpec]],
+     sliding_window: int | None = None,
++    span_leading_pad_modulus: int = 0,
++    clamp_sliding_window: bool = False,
+ ) -> dict[int, list[tuple[int, int]]]:
+     """Compute PrefixLM bidirectional ranges for multimodal tokens.
+ 
+     Ranges exceeding sliding_window are skipped to prevent early tokens
+-    from attending across the entire image span.
++    from attending across the entire image span, unless the model clamps
++    mm prefixes to the sliding window in-kernel (e.g. DeepSeek-V4 vision
++    and Gemma4), in which case the range is kept and the kernel bounds it
++    per query.
++
++    Models with ``mm_prefix_span_leading_pad_modulus`` (e.g. DeepSeek-V4
++    vision) define the bidirectional span over the whole sentinel block
++    [IMAGE_START, IMAGE_END] with a position-dependent alignment pad
++    prepended before the first sentinel. For those, derive the span from
++    the full placeholder range with the pad stripped, instead of the
++    embed-token ranges (which, in the N-layout, are per-row-pair runs).
+     """
+     req_doc_ranges: dict[int, list[tuple[int, int]]] = {}
+     for req_idx, req_id in enumerate(req_ids):
+@@ -366,8 +378,27 @@
+         for mm_feature in mm_features.get(req_id, ()):
+             if mm_feature.modality not in ("image", "video"):
+                 continue
+-            for r in mm_feature.mm_position.extract_embeds_range():
+-                if sliding_window is not None and (r[1] - r[0] + 1) > sliding_window:
++            pos_info = mm_feature.mm_position
++            if span_leading_pad_modulus:
++                pad = (
++                    span_leading_pad_modulus
++                    - 1
++                    - pos_info.offset % span_leading_pad_modulus
++                )
++                img_doc_range = [
++                    (
++                        pos_info.offset + pad,
++                        pos_info.offset + pos_info.length - 1,
++                    )
++                ]
++            else:
++                img_doc_range = pos_info.extract_embeds_range()
++            for r in img_doc_range:
++                if (
++                    not clamp_sliding_window
++                    and sliding_window is not None
++                    and (r[1] - r[0] + 1) > sliding_window
++                ):
+                     continue
+                 image_doc_ranges.append(r)
+         req_doc_ranges[req_idx] = image_doc_ranges
